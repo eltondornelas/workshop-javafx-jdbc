@@ -3,6 +3,7 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import gui.util.Alerts;
@@ -35,13 +36,16 @@ public class MainViewController implements Initializable {
 	
 	@FXML
 	public void onMenuItemDepartmentAction() {
-		loadView2("/gui/DepartmentList.fxml");
+		loadView("/gui/DepartmentList.fxml", (DepartmentListController controller) -> {
+			controller.setDepartmentService(new DepartmentService());
+			controller.updateTableView();
+		});
 		//carrega a tela de departamentos
 	}
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		loadView("/gui/About.fxml");
+		loadView("/gui/About.fxml", x -> {});
 	}
 	
 	@Override
@@ -51,7 +55,7 @@ public class MainViewController implements Initializable {
 	}
 	
 	//o sincronado é para garantir que a função não será interrompida. Funções de interface são multi thread.
-	private synchronized void loadView(String absoluteName) {
+	private synchronized <T> void loadView(String absoluteName, Consumer<T> initializingAction) {
 		//função para abrir outra tela
 		//absoluteName porque vai passar o caminho completo gui/about.fxml
 				
@@ -71,45 +75,15 @@ public class MainViewController implements Initializable {
 			mainVBox.getChildren().add(mainMenu);
 			mainVBox.getChildren().addAll(newVBox.getChildren());
 			
-		}
-		catch (IOException e) {
-			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
-			//mostra o alerta na tela			
-		}
-	}
-	
-	private synchronized void loadView2(String absoluteName) {
-		//função para abrir outra tela
-		//absoluteName porque vai passar o caminho completo gui/about.fxml
-				
-		try {
-			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName)); //objeto que carrega a tela
-			VBox newVBox = loader.load();
-			
-			//mostrar essa view dentro da janela principal, precisa pegar uma referência da cena (scene) que foi declarada no Main.java (mainScene)
-			Scene mainScene = Main.getMainScene();
-			
-			//os filhos (children) da tela about tem que ficar dentro dos filhos da tela principal (MainView)
-			//precisa pegar a referência do vbox da tela principal
-			VBox mainVBox = (VBox) ((ScrollPane) mainScene.getRoot()).getContent(); //pega o primeiro elemento da view que é o ScrollPane. precisa fazer o UpCast
-			
-			Node mainMenu = mainVBox.getChildren().get(0); //primeiro filho do VBox da janela principal = mainMenu
-			mainVBox.getChildren().clear();
-			mainVBox.getChildren().add(mainMenu);
-			mainVBox.getChildren().addAll(newVBox.getChildren());
-			
-			DepartmentListController controller = loader.getController();
-			//loader é o objeto que carrega a view, com ele você pode tanto acessar a view como pegar o controller
-			
-			controller.serDepartmentService(new DepartmentService());
-			controller.UpdateTableView();
+			//para ativar o parâmetro Consumer<T>
+			T controller = loader.getController();
+			initializingAction.accept(controller);
+			//vão executar os comandos da função lambda que foi passado como argumento
 			
 		}
 		catch (IOException e) {
 			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
 			//mostra o alerta na tela			
 		}
-	}
-
-	
+	}	
 }
