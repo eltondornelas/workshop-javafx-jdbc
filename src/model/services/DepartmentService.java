@@ -15,4 +15,13 @@ public class DepartmentService {
 		//vai no banco de dados buscar os departamentos
 	}	
 	
+	public void saveOrUpdate(Department obj) {
+		if (obj.getId() == null) {
+			//significa que está inserindo um novo departamento
+			dao.insert(obj);			
+		}
+		else {
+			dao.update(obj);
+		}
+	}
 }
