@@ -123,6 +123,7 @@ public class DepartmentListController implements Initializable, DataChangeListen
 			// agora sim a janela do formulário para preencher um novo departamento
 
 		} catch (IOException e) {
+			e.printStackTrace();
 			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
 		}
 	}
